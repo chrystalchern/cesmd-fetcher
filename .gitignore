@@ -107,3 +107,4 @@ venv.bak/
 *.json
 *.zip
 *.swp
+cesmd/motions_ready/Makefile
