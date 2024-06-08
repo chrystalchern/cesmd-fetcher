@@ -108,3 +108,4 @@ venv.bak/
 *.zip
 *.swp
 cesmd/motions_ready/Makefile
+cesmd/buildings/
