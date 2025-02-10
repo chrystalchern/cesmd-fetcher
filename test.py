@@ -10,16 +10,16 @@ import quakeio # read earthquake data, e.g. from CGS V2 files
 from pathlib import Path # represent paths from strings
 
 # TODO: Define a function that gives me an earthquake event
-# based on a bridge code (e.g. "CE13705") and a event index (e.g. 0, 1, ...)
+# based on a bridge code (e.g. "CE13705") and an event index (e.g. 0, 1, ...)
 def get_earthquake(code, index):
     # if code = "CE13705", I want "CSMIP/bridges/motions_original/CE13705"
     # TODO: use an f-string to make the path to the folder based on the variable `code`
-    path_to_bridge_folder = Path("CSMIP/bridges/motions_original/CE13705/anza_12jun2005_CE13705P.ZIP") # get the bridge folder
+    path_to_bridge_folder = Path("CSMIP/bridges/motions_original/{code}") # get the bridge folder
     print(path_to_bridge_folder) # debugging code. I should expect a path object with the correct path
     # TODO: use glob, a function of Path, to give me a list of all the earthquakes in the folder
-    earthquakes = path_to_bridge_folder.glob("...")
+    earthquakes = path_to_bridge_folder.glob("*.ZIP")
     # TODO: get the earthquake based on its index (if index=0, eq = the first item in earthquakes)
-    eq = ...
+    eq = earthquakes[index] if index < len(earthquakes) else None # get the path to earthquake zip file
     print(eq) # debugging code. I should expect a path to a .zip file here.
     # event is something that was read by quakeio. read and return the event
     event = quakeio.read(eq)
