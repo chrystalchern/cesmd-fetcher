@@ -109,3 +109,4 @@ venv.bak/
 *.swp
 cesmd/motions_ready/Makefile
 cesmd/buildings/
+.DS_Store
