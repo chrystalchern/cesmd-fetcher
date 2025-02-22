@@ -48,8 +48,15 @@ if __name__ == "__main__":
     import matplotlib.pyplot as plt
     # TODO: plot the acceleration. label the plot with the 
     # bridge code (CE89324), earthquake date, and channel number.
+    # TODO: plot the acceleration data vs. time
     fig,ax = plt.subplots()
+    ax.plot() 
+    ax.set_xlabel("Time (s)")
+    ax.set_ylabel("Acceleration (cm/s^2)")
+    ax.set_title(f"CE89324, {event['event_date']}, channel 7")
+    plt.show()
 
+    # TODO: Get modes; for now just use Sensors 3 and 7; Want to loop through all the earthquakes; We have desired sensors for each bridge
     inputs, dt = get_accel(get_earthquake("CE89324",3), 3)
     outputs, dt = get_accel(get_earthquake("CE89324",3), 7)
     import mdof
@@ -58,7 +65,12 @@ if __name__ == "__main__":
     # https://chrystalchern.github.io/mdof/library/mdof.modal.html
     modes = mdof.modal.system_modes(realization,dt)
     print(modes)
-
+    
+    # Care about frequencies and mode shapes
+    # Different frequencies for different earthquakes, how do we find a normal condition based on those frequencies?
+    # How do we compare the new frequencies from future earthquakes to the collection of the old frequencies we have?
+    # Want to plot them (frequencies vs ..)
+    # Maybe look at the first couple frequencies for different EQs to see if they are similar or have changed
 
 
 
