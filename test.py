@@ -46,25 +46,108 @@ if __name__ == "__main__":
     accel, dt = get_accel(event, 7)
 
     import matplotlib.pyplot as plt
-    # TODO: plot the acceleration. label the plot with the 
-    # bridge code (CE89324), earthquake date, and channel number.
-    # TODO: plot the acceleration data vs. time
-    fig,ax = plt.subplots()
-    ax.plot() 
+
+    # Generate time array based on the time step (dt) and the number of data points
+    time = [i * dt for i in range(len(accel))]
+
+    # Plot the acceleration data vs. time
+    fig, ax = plt.subplots()
+    ax.plot(time, accel)  # Pass the time and acceleration data to plot
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Acceleration (cm/s^2)")
     ax.set_title(f"CE89324, {event['event_date']}, channel 7")
     plt.show()
 
-    # TODO: Get modes; for now just use Sensors 3 and 7; Want to loop through all the earthquakes; We have desired sensors for each bridge
-    inputs, dt = get_accel(get_earthquake("CE89324",3), 3)
-    outputs, dt = get_accel(get_earthquake("CE89324",3), 7)
-    import mdof
-    # https://chrystalchern.github.io/mdof/library/mdof.realize.html
-    realization = mdof.realize.srim(inputs,outputs)
-    # https://chrystalchern.github.io/mdof/library/mdof.modal.html
-    modes = mdof.modal.system_modes(realization,dt)
-    print(modes)
+### FINDING MODES ###
+
+# Function to get all earthquakes for the bridge "CE89324"
+def get_all_earthquakes(bridge_code):
+    # Replace this with your actual function to retrieve all earthquakes
+    # For example, return a list of earthquake indices or IDs
+    return range(15)  # Example: Assume there are 15 earthquakes
+
+def get_first_5_modes(modes_dict):
+    # Convert the dictionary to a list of mode entries
+    modes_list = list(modes_dict.items())
+    
+    # Sort modes by frequency (ascending order)
+    sorted_modes = sorted(modes_list, key=lambda x: x[1]['freq'])
+    
+    # Extract the first 5 modes
+    first_5_modes = sorted_modes[:5]
+    
+    return first_5_modes
+
+# Main script
+bridge_code = "CE89324"
+input_channel = 3  # Sensor channel for inputs
+output_channel = 7  # Sensor channel for outputs
+
+# Get all earthquakes for the bridge
+earthquake_indices = get_all_earthquakes(bridge_code)
+
+# Initialize lists to store results for all earthquakes
+all_frequencies = []  # Shape: [num_earthquakes, 3]
+all_damping_ratios = []  # Shape: [num_earthquakes, 3]
+
+# Loop through all earthquakes for bridge "CE89324"
+for earthquake_index in earthquake_indices:
+    # Get input/output data for this earthquake
+    inputs, dt = get_accel(get_earthquake("CE89324", earthquake_index), 3)
+    outputs, dt = get_accel(get_earthquake("CE89324", earthquake_index), 7)
+    
+    # Compute modal parameters
+    realization = mdof.realize.srim(inputs, outputs)
+    modes = mdof.modal.system_modes(realization, dt)
+    print(modes)       # print(modes)
+
+    # Extract first 5 modes (sorted by frequency)
+    first_5_modes = get_first_5_modes(modes)
+    
+    # Store frequencies and damping ratios
+    frequencies = [mode[1]['freq'] for mode in first_5_modes]
+    damping_ratios = [mode[1]['damp'] for mode in first_5_modes]
+    
+    all_frequencies.append(frequencies)
+    all_damping_ratios.append(damping_ratios)
+
+import matplotlib.pyplot as plt
+
+# Convert to numpy arrays
+all_frequencies = np.array(all_frequencies)
+all_damping_ratios = np.array(all_damping_ratios)
+
+# Plot frequencies
+plt.figure(figsize=(12, 6))
+for mode in range(5):
+    plt.plot(
+        earthquake_indices,
+        all_frequencies[:, mode],
+        marker='o',
+        label=f"Mode {mode+1}"
+    )
+plt.xlabel("Earthquake Index")
+plt.ylabel("Frequency (Hz)")
+plt.title("First 5 Mode Frequencies Across Earthquakes")
+plt.legend()
+plt.grid()
+plt.show()
+
+# Plot damping ratios
+plt.figure(figsize=(12, 6))
+for mode in range(5):
+    plt.plot(
+        earthquake_indices,
+        all_damping_ratios[:, mode],
+        marker='o',
+        label=f"Mode {mode+1}"
+    )
+plt.xlabel("Earthquake Index")
+plt.ylabel("Damping Ratio")
+plt.title("First 5 Mode Damping Ratios Across Earthquakes")
+plt.legend()
+plt.grid()
+plt.show()
     
     # Care about frequencies and mode shapes
     # Different frequencies for different earthquakes, how do we find a normal condition based on those frequencies?
@@ -73,4 +156,6 @@ if __name__ == "__main__":
     # Maybe look at the first couple frequencies for different EQs to see if they are similar or have changed
 
 
-
+## Questions:
+# Negative damping ratios? What does that mean?
+# The order of frequencies is not consistent?
