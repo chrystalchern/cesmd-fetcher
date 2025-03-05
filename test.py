@@ -118,19 +118,42 @@ all_frequencies = np.array(all_frequencies)
 all_damping_ratios = np.array(all_damping_ratios)
 
 # Plot frequencies
-plt.figure(figsize=(12, 6))
+fig,ax = plt.subplots(figsize=(12, 6))
+fig_hist, ax_hist = plt.subplots(5, 1, figsize=(8, 12))
+colors = ['skyblue', 'lightgreen', 'salmon', 'orange', 'purple']
+
 for mode in range(5):
-    plt.plot(
+    ax.plot(
         earthquake_indices,
         all_frequencies[:, mode],
         marker='o',
         label=f"Mode {mode+1}"
     )
-plt.xlabel("Earthquake Index")
-plt.ylabel("Frequency (Hz)")
-plt.title("First 5 Mode Frequencies Across Earthquakes")
-plt.legend()
-plt.grid()
+    ax_hist[mode].hist(
+        all_frequencies[:, mode],
+        bins=20,
+        color=colors[mode],
+        edgecolor=colors[mode],
+        alpha=0.7,
+        label=f"Mode {mode+1}"
+    )
+    
+    ax_hist[mode].set_title(f"Mode {mode+1} Frequencies Histogram", fontsize=12, fontweight='bold')
+    ax_hist[mode].set_xlabel("Frequency (Hz)", fontsize=8)
+    ax_hist[mode].set_ylabel("Frequency Count", fontsize=8)
+    ax_hist[mode].grid(True, linestyle='--', alpha=0.6, linewidth=0.5)
+
+ax.set_xlabel("Earthquake Index")
+ax.set_ylabel("Frequency (Hz)")
+ax.set_title("First 5 Mode Frequencies Across Earthquakes")
+ax.legend()
+ax.grid()
+fig.show()
+fig.savefig('frequencies.png')
+fig_hist.show()
+fig_hist.savefig('frequencies_hist.png')
+# Adjust layout
+plt.tight_layout()
 plt.show()
 
 # Plot damping ratios
@@ -148,6 +171,7 @@ plt.title("First 5 Mode Damping Ratios Across Earthquakes")
 plt.legend()
 plt.grid()
 plt.show()
+plt.savefig('damping_ratios.png')
     
     # Care about frequencies and mode shapes
     # Different frequencies for different earthquakes, how do we find a normal condition based on those frequencies?
@@ -159,3 +183,7 @@ plt.show()
 ## Questions:
 # Negative damping ratios? What does that mean?
 # The order of frequencies is not consistent?
+
+
+
+## Paper: Why 0.2% off the true data?
