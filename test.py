@@ -131,7 +131,7 @@ for mode in range(5):
     )
     ax_hist[mode].hist(
         all_frequencies[:, mode],
-        bins=20,
+        bins=len(),
         color=colors[mode],
         edgecolor=colors[mode],
         alpha=0.7,
