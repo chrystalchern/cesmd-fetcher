@@ -8,7 +8,6 @@ import struct
 # third party imports
 from requests import Session, Request
 
-#URL_TEMPLATE = 'https://strongmotioncenter.org/testuser/wserv2/records/query'
 URL_TEMPLATE = 'https://www.strongmotioncenter.org/wserv/records/query'
 STATIONS_URL = "https://www.strongmotioncenter.org/wserv/stations/query"
 
@@ -99,16 +98,6 @@ KEY_TABLE = {'return_type': 'rettype',
              'event_radius': 'erad',
              }
 
-def resolve_station(station_code, include_inactive=True):
-    params = {
-        "format": "json",
-        "stcode": station_code,
-        "abandoned": "true" if include_inactive else "false",
-    }
-    s = Session()
-    r = s.send(Request("GET", STATIONS_URL, params=params).prepare(), timeout=60)
-    r.raise_for_status()
-    return r.json()
 
 def get_records(output,
                 email,
