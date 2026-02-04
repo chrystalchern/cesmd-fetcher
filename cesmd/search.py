@@ -253,6 +253,7 @@ def get_records(output,
     params['nodata'] = '404'
 
     #check
+    # Remove unset parameters (None/"")
     params = {k: v for k, v in params.items() if v is not None and v != ""}
     params["rettype"] = return_type
     params["groupby"] = group_by
@@ -262,6 +263,8 @@ def get_records(output,
 
 
     if return_type == "metadata":
+        # Metadata requests return a JSON response, not a ZIP dataset
+        # download and email are only relevant for rettype=dataset downloads
         params.pop("download", None)
         params.pop("email", None)
         params["format"] = "json"
