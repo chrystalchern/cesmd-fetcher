@@ -9,7 +9,7 @@ import struct
 from requests import Session, Request
 
 URL_TEMPLATE = 'https://www.strongmotioncenter.org/wserv/records/query'
-STATIONS_URL = "https://www.strongmotioncenter.org/wserv/stations/query"
+#STATIONS_URL = "https://www.strongmotioncenter.org/wserv/stations/query"
 
 RETURN_TYPES = ['dataset', 'metadata']
 PROCESS_LEVELS = ['processed', 'raw', 'plots', 'all']
@@ -254,9 +254,9 @@ def get_records(output,
 
     #check
     # Remove unset parameters (None/"")
-    params = {k: v for k, v in params.items() if v is not None and v != ""}
-    params["rettype"] = return_type
-    params["groupby"] = group_by
+    #params = {k: v for k, v in params.items() if v is not None and v != ""}
+    # params["rettype"] = return_type
+    # params["groupby"] = group_by
 
 
     session = Session()
@@ -279,7 +279,7 @@ def get_records(output,
     
 
 
-    #check
+    #check download
     params["email"] = email
     request = Request("GET", URL_TEMPLATE, params=params).prepare()
     print("REQUEST URL:", request.url)
@@ -314,7 +314,7 @@ def get_records(output,
     # response = session.send(request, timeout=120)
 
 
-    #check
+    # #check
     # if response.status_code != 200:
     #     raise Exception(
     #         f"HTTP {response.status_code} {response.reason}\n"
