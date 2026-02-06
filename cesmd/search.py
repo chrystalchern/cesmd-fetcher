@@ -9,7 +9,6 @@ import struct
 from requests import Session, Request
 
 URL_TEMPLATE = 'https://www.strongmotioncenter.org/wserv/records/query'
-#STATIONS_URL = "https://www.strongmotioncenter.org/wserv/stations/query"
 
 RETURN_TYPES = ['dataset', 'metadata']
 PROCESS_LEVELS = ['processed', 'raw', 'plots', 'all']
@@ -252,144 +251,81 @@ def get_records(output,
     params['orderby'] = 'epidist-asc'
     params['nodata'] = '404'
 
-    #check
-    # Remove unset parameters (None/"")
-    #params = {k: v for k, v in params.items() if v is not None and v != ""}
-    # params["rettype"] = return_type
-    # params["groupby"] = group_by
-
-
     session = Session()
-
-
-    if return_type == "metadata":
-        # Metadata requests return a JSON response, not a ZIP dataset
-        # download and email are only relevant for rettype=dataset downloads
-        params.pop("download", None)
-        params.pop("email", None)
-        params["format"] = "json"
-        request = Request("GET", URL_TEMPLATE, params=params).prepare()
-        print("REQUEST URL:", request.url)
-        response = session.send(request, timeout=120)
-        response.raise_for_status()
-        ct = (response.headers.get("Content-Type") or "").lower()
-        return response.json() if "json" in ct else response.text
-
-
-    
-
-
-    #check download
-    params["email"] = email
-    request = Request("GET", URL_TEMPLATE, params=params).prepare()
-    print("REQUEST URL:", request.url)
+    request = Request('GET', URL_TEMPLATE, params=params).prepare()
+    url = request.url
     response = session.send(request, timeout=120)
-    response.raise_for_status()
 
-    # write zip
-    if not output.endswith(".zip"):
-        output += ".zip"
-    with open(output, "wb") as f:
-        f.write(response.content)
-    # unpack if requested
+    if response.status_code != 200:
+        raise Exception(
+            f"HTTP {response.status_code} {response.reason}\n"
+            f"{response.text[:800]}"
+        )
+
+    if not response.status_code == 200:
+        fmt = 'Your request returned a status code of %i with message: "%s"'
+        raise Exception(fmt % (response.status_code, response.reason))
+
     if unpack:
-        outdir = os.path.splitext(output)[0]
-        os.makedirs(outdir, exist_ok=True)
-        myzip = zipfile.ZipFile(io.BytesIO(response.content), mode="r")
-        myzip.extractall(outdir)
+        if not os.path.exists(output):
+            os.makedirs(output)
+        fbytes = io.BytesIO(response.content)
+        myzip = zipfile.ZipFile(fbytes, mode='r')
+        members = myzip.namelist()
+        for member in members:
+            finfo = myzip.getinfo(member)
+            if finfo.is_dir():
+                continue
+            if not member.lower().endswith('.zip'):
+                fin = myzip.open(member)
+                flatfile = member.replace('/', '_')
+                outfile = os.path.join(output, flatfile)
+                with open(outfile, 'wb') as fout:
+                    fout.write(fin.read())
+                fin.close()
+            else:
+                zfiledata = io.BytesIO(myzip.read(member))
+                try:
+                    tmpzip = zipfile.ZipFile(zfiledata, mode='r')
+                    tmp_members = tmpzip.namelist()
+                    for tmp_member in tmp_members:
+                        tfinfo = tmpzip.getinfo(tmp_member)
+                        if not tfinfo.is_dir():
+                            fin = tmpzip.open(tmp_member)
+                            flatfile = tmp_member.replace('/', '_')
+                            parent, _ = os.path.splitext(member)
+                            parent = parent.replace('/', '_')
+                            # sometimes the member ends with .zip.zip (??)
+                            parent = parent.replace('.zip', '')
+                            datadir = os.path.join(output, parent)
+                            if not os.path.exists(datadir):
+                                os.makedirs(datadir)
+                            outfile = os.path.join(datadir, flatfile)
+                            with open(outfile, 'wb') as fout:
+                                fout.write(fin.read())
+                            fin.close()
+                    tmpzip.close()
+                    zfiledata.close()
+                except Exception as e:
+                    fmt = ('Could not unpack sub-zip file "%s" due to error "%s". '
+                           'Skipping.')
+                    print(fmt % (member, str(e)))
+                    continue
+
         myzip.close()
+
         datafiles = []
-        for root, _, files in os.walk(outdir):
+        for root, fdir, files in os.walk(output):
             for tfile in files:
-                if not tfile.endswith(".json"):
+                if not tfile.endswith('.json'):
                     datafiles.append(tfile)
-        return os.path.abspath(outdir), datafiles
-    # else just return zip path
-    return os.path.abspath(output), []
 
-
-
-    # request = Request('GET', URL_TEMPLATE, params=params).prepare()
-    # url = request.url
-    # response = session.send(request, timeout=120)
-
-
-    # #check
-    # if response.status_code != 200:
-    #     raise Exception(
-    #         f"HTTP {response.status_code} {response.reason}\n"
-    #         f"{response.text[:800]}"
-    #     )
-    # # if return_type == "metadata":
-    # # ct = (response.headers.get("Content-Type") or "").lower()
-    # if "json" in ct:
-    #     return response.json()
-    # return response.text
-
-    # # if not response.status_code == 200:
-    # #     fmt = 'Your request returned a status code of %i with message: "%s"'
-    # #     raise Exception(fmt % (response.status_code, response.reason))
-
-    # if unpack:
-    #     if not os.path.exists(output):
-    #         os.makedirs(output)
-    #     fbytes = io.BytesIO(response.content)
-    #     myzip = zipfile.ZipFile(fbytes, mode='r')
-    #     members = myzip.namelist()
-    #     for member in members:
-    #         finfo = myzip.getinfo(member)
-    #         if finfo.is_dir():
-    #             continue
-    #         if not member.lower().endswith('.zip'):
-    #             fin = myzip.open(member)
-    #             flatfile = member.replace('/', '_')
-    #             outfile = os.path.join(output, flatfile)
-    #             with open(outfile, 'wb') as fout:
-    #                 fout.write(fin.read())
-    #             fin.close()
-    #         else:
-    #             zfiledata = io.BytesIO(myzip.read(member))
-    #             try:
-    #                 tmpzip = zipfile.ZipFile(zfiledata, mode='r')
-    #                 tmp_members = tmpzip.namelist()
-    #                 for tmp_member in tmp_members:
-    #                     tfinfo = tmpzip.getinfo(tmp_member)
-    #                     if not tfinfo.is_dir():
-    #                         fin = tmpzip.open(tmp_member)
-    #                         flatfile = tmp_member.replace('/', '_')
-    #                         parent, _ = os.path.splitext(member)
-    #                         parent = parent.replace('/', '_')
-    #                         # sometimes the member ends with .zip.zip (??)
-    #                         parent = parent.replace('.zip', '')
-    #                         datadir = os.path.join(output, parent)
-    #                         if not os.path.exists(datadir):
-    #                             os.makedirs(datadir)
-    #                         outfile = os.path.join(datadir, flatfile)
-    #                         with open(outfile, 'wb') as fout:
-    #                             fout.write(fin.read())
-    #                         fin.close()
-    #                 tmpzip.close()
-    #                 zfiledata.close()
-    #             except Exception as e:
-    #                 fmt = ('Could not unpack sub-zip file "%s" due to error "%s". '
-    #                        'Skipping.')
-    #                 print(fmt % (member, str(e)))
-    #                 continue
-
-    #     myzip.close()
-
-    #     datafiles = []
-    #     for root, fdir, files in os.walk(output):
-    #         for tfile in files:
-    #             if not tfile.endswith('.json'):
-    #                 datafiles.append(tfile)
-
-    #     return (os.path.abspath(output), datafiles)
-    # else:
-    #     if not output.endswith('.zip'):
-    #         output += '.zip'
-    #     with open(output, 'wb') as f:
-    #         f.write(response.content)
-    #     return (output, [])
+        return (os.path.abspath(output), datafiles)
+    else:
+        if not output.endswith('.zip'):
+            output += '.zip'
+        with open(output, 'wb') as f:
+            f.write(response.content)
+        return (output, [])
 
 
