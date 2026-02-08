@@ -8,6 +8,7 @@ import struct
 # third party imports
 from requests import Session, Request
 
+# See CESMD Web Services documentation at https://www.strongmotioncenter.org/wserv/
 URL_TEMPLATE = 'https://www.strongmotioncenter.org/wserv/records/query'
 
 RETURN_TYPES = ['dataset', 'metadata']
