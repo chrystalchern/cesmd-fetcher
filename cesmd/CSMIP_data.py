@@ -8,7 +8,7 @@ import os
 import glob
 from zipfile import ZipFile
 
-STATION_TYPE = "buildings"  # "bridges", "buildings"
+STATION_TYPE = "bridges"  # "bridges", "buildings"
 
 OUT_DIR = Path(f"CSMIP/{STATION_TYPE}")
 Path.mkdir(OUT_DIR, exist_ok=True)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     if UPDATE_FILES:
         for station_key in STATIONS.keys():
             cesmd = STATIONS[station_key]["cesmd"]
-            print(f"{STATIONS[station_key]["name"]} ({cesmd})")
+            print(f"{STATIONS[station_key]['name']} ({cesmd})")
             search.get_records(str(OUT_DIR/cesmd), "cchern@berkeley.edu", station_code=cesmd, process_level="processed", include_inactive=True)
             # Example: specific station
             # search.get_records(
